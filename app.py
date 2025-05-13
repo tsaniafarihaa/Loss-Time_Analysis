@@ -418,6 +418,6 @@ st.sidebar.info("""
 # Add JABIL-themed footer
 st.markdown("""
 <div style='text-align: center; color: #00517C; padding: 20px;'>
-    Powered by JABIL Loss Time Analysis System | &copy; 2023
+    Powered by JABIL HR | &copy; 2025
 </div>
 """, unsafe_allow_html=True)
