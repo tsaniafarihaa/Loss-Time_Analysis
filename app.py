@@ -5,6 +5,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from io import BytesIO
 from tqdm.auto import tqdm
+import json
 
 # === STREAMLIT CONFIG ===
 st.set_page_config(page_title="Loss Time Tracker", layout="wide")
@@ -12,7 +13,19 @@ st.title("Loss Time Analysis & Export to Spreadsheet")
 
 # === GOOGLE SHEETS SETUP ===
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("service_account.json", scope)
+creds_dict = {
+    "type": st.secrets["service_account"]["type"],
+    "project_id": st.secrets["service_account"]["project_id"],
+    "private_key_id": st.secrets["service_account"]["private_key_id"],
+    "private_key": st.secrets["service_account"]["private_key"],
+    "client_email": st.secrets["service_account"]["client_email"],
+    "client_id": st.secrets["service_account"]["client_id"],
+    "auth_uri": st.secrets["service_account"]["auth_uri"],
+    "token_uri": st.secrets["service_account"]["token_uri"],
+    "auth_provider_x509_cert_url": st.secrets["service_account"]["auth_provider_x509_cert_url"],
+    "client_x509_cert_url": st.secrets["service_account"]["client_x509_cert_url"]
+}
+creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
 
 # === FILE UPLOAD ===
@@ -33,7 +46,6 @@ if uploaded_file:
     df_tap = df_tap.dropna(subset=['When'])
     df_tap['Direction'] = df_tap['Where'].apply(
         lambda x: 'IN' if 'IN' in str(x).upper() else ('OUT' if 'OUT' in str(x).upper() else None)
-    )
     df_tap = df_tap.dropna(subset=['Direction'])
     df_tap = df_tap[df_tap['Where'].str.contains('PEDESTRIAN', case=False, na=False)]
     df_tap = df_tap[~df_tap['ID'].isin(pengecualian_list)]
