@@ -55,7 +55,7 @@ if uploaded_file:
         ins['used'] = False
         for _, out_row in outs.iterrows():
             out_time = out_row['When']
-            candidates = ins[(ins['When'] > out_time) & (~ins['used']) & (ins['date'] == out_row['date'])]
+            candidates = ins[(ins['When'] > out_time) & (~ins['used'])]
             if candidates.empty:
                 continue
             in_row = candidates.iloc[0]
@@ -149,36 +149,25 @@ if uploaded_file:
     # === EXPORT TO GOOGLE SHEET ===
     if st.button("Save to Google Spreadsheet"):
         try:
-            # Konversi kolom timestamp menjadi string
             df_export = df.copy()
-            
-            # Konversi kolom datetime64 menjadi string
             for col in df_export.select_dtypes(include=['datetime64']).columns:
                 df_export[col] = df_export[col].dt.strftime('%Y-%m-%d %H:%M:%S')
-            
-            # Konversi kolom time secara manual
-            time_cols = ['Jam_OUT', 'time_only']  # Nama kolom yang berisi objek time
+            time_cols = ['Jam_OUT', 'time_only']
             for col in time_cols:
                 if col in df_export.columns:
-                    df_export[col] = df_export[col].apply(
-                        lambda x: x.strftime('%H:%M:%S') if hasattr(x, 'strftime') else str(x)
-                    )
-            
-            # Ubah semua kolom menjadi string untuk kompatibilitas dengan Google Sheets
+                    df_export[col] = df_export[col].apply(lambda x: x.strftime('%H:%M:%S') if hasattr(x, 'strftime') else str(x))
             for col in df_export.columns:
                 df_export[col] = df_export[col].astype(str)
-            
-            # Konversi NaN/None menjadi string kosong untuk kompatibilitas gspread
             df_export = df_export.replace('nan', '')
             df_export = df_export.replace('None', '')
-            
+
             sheet = client.open_by_key("1byoXaizt1OLFJNDcWyf9DHNe0aoxfMmsId54o2L9lFE").worksheet("Sheet1")
             sheet.clear()
             sheet.update([df_export.columns.values.tolist()] + df_export.values.tolist())
             st.success("✅ Data berhasil disimpan ke Google Sheets")
         except Exception as e:
             st.error(f"❌ Gagal menyimpan ke spreadsheet: {e}")
-            st.exception(e)  # Tampilkan detail error untuk debugging
+            st.exception(e)
 
     # === DOWNLOAD EXCEL ===
     buffer = BytesIO()
