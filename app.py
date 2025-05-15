@@ -35,6 +35,7 @@ if uploaded_file:
     df_tap = df_tap.dropna(subset=['When'])
     df_tap['Direction'] = df_tap['Where'].apply(
         lambda x: 'IN' if 'IN' in str(x).upper() else ('OUT' if 'OUT' in str(x).upper() else None)
+    )
     df_tap = df_tap.dropna(subset=['Direction'])
     df_tap = df_tap[df_tap['Where'].str.contains('PEDESTRIAN', case=False, na=False)]
     df_tap = df_tap[~df_tap['ID'].isin(pengecualian_list)]
