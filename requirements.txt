@@ -1,7 +1,7 @@
 streamlit
 pandas
-numpy
-matplotlib
-seaborn
+gspread
+oauth2client
 openpyxl
 xlsxwriter
+tqdm
