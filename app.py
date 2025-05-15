@@ -149,9 +149,23 @@ if uploaded_file:
     # === EXPORT TO GOOGLE SHEET ===
     if st.button("Save to Google Spreadsheet"):
         try:
+            # Konversi kolom timestamp menjadi string
+            df_export = df.copy()
+            for col in df_export.select_dtypes(include=['datetime64']).columns:
+                df_export[col] = df_export[col].dt.strftime('%Y-%m-%d %H:%M:%S')
+            
+            # Konversi kolom time menjadi string
+            for col in df_export.columns:
+                if pd.api.types.is_object_dtype(df_export[col]):
+                    if isinstance(df_export[col].iloc[0] if not df_export.empty else None, datetime.time):
+                        df_export[col] = df_export[col].apply(lambda x: x.strftime('%H:%M:%S') if pd.notnull(x) else None)
+            
+            # Konversi NaN/None menjadi string kosong untuk kompatibilitas gspread
+            df_export = df_export.fillna('')
+            
             sheet = client.open_by_key("1byoXaizt1OLFJNDcWyf9DHNe0aoxfMmsId54o2L9lFE").worksheet("Sheet1")
             sheet.clear()
-            sheet.update([df.columns.values.tolist()] + df.values.tolist())
+            sheet.update([df_export.columns.values.tolist()] + df_export.values.tolist())
             st.success("✅ Data berhasil disimpan ke Google Sheets")
         except Exception as e:
             st.error(f"❌ Gagal menyimpan ke spreadsheet: {e}")
