@@ -13,18 +13,7 @@ st.title("Loss Time Analysis & Export to Spreadsheet")
 
 # === GOOGLE SHEETS SETUP ===
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds_dict = {
-    "type": st.secrets["service_account"]["type"],
-    "project_id": st.secrets["service_account"]["project_id"],
-    "private_key_id": st.secrets["service_account"]["private_key_id"],
-    "private_key": st.secrets["service_account"]["private_key"],
-    "client_email": st.secrets["service_account"]["client_email"],
-    "client_id": st.secrets["service_account"]["client_id"],
-    "auth_uri": st.secrets["service_account"]["auth_uri"],
-    "token_uri": st.secrets["service_account"]["token_uri"],
-    "auth_provider_x509_cert_url": st.secrets["service_account"]["auth_provider_x509_cert_url"],
-    "client_x509_cert_url": st.secrets["service_account"]["client_x509_cert_url"]
-}
+creds_dict = json.loads(st.secrets["GOOGLE_SERVICE_ACCOUNT_JSON"])
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
 
