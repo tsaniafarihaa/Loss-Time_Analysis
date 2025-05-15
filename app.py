@@ -52,10 +52,11 @@ if uploaded_file:
         ins['used'] = False
         for _, out_row in outs.iterrows():
             out_time = out_row['When']
-            candidates = ins[(ins['When'] > out_time) & (~ins['used'])]
+            candidates = ins[(ins['When'] > out_time) & (~ins['used'])].copy()
             if candidates.empty:
                 continue
-            in_row = candidates.iloc[0]
+            candidates['delta'] = (candidates['When'] - out_time).abs()
+            in_row = candidates.loc[candidates['delta'].idxmin()]
             in_time = in_row['When']
             durasi = (in_time - out_time).total_seconds() / 60
             results.append({
