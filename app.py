@@ -156,20 +156,21 @@ if uploaded_file:
             for col in df_export.select_dtypes(include=['datetime64']).columns:
                 df_export[col] = df_export[col].dt.strftime('%Y-%m-%d %H:%M:%S')
             
-            # Konversi kolom time menjadi string dengan cara yang lebih aman
-            for col in df_export.columns:
-                if not df_export.empty and pd.api.types.is_object_dtype(df_export[col]):
-                    # Periksa nilai pertama yang tidak null
-                    sample_vals = df_export[col].dropna()
-                    if len(sample_vals) > 0 and isinstance(sample_vals.iloc[0], datetime.time):
-                        df_export[col] = df_export[col].apply(lambda x: x.strftime('%H:%M:%S') if pd.notnull(x) and isinstance(x, datetime.time) else x)
+            # Konversi kolom time secara manual
+            time_cols = ['Jam_OUT', 'time_only']  # Nama kolom yang berisi objek time
+            for col in time_cols:
+                if col in df_export.columns:
+                    df_export[col] = df_export[col].apply(
+                        lambda x: x.strftime('%H:%M:%S') if hasattr(x, 'strftime') else str(x)
+                    )
             
-            # Konversi NaN/None menjadi string kosong untuk kompatibilitas gspread
-            df_export = df_export.fillna('')
-            
-            # Pastikan semua nilai dalam DataFrame dapat dikonversi ke JSON
+            # Ubah semua kolom menjadi string untuk kompatibilitas dengan Google Sheets
             for col in df_export.columns:
                 df_export[col] = df_export[col].astype(str)
+            
+            # Konversi NaN/None menjadi string kosong untuk kompatibilitas gspread
+            df_export = df_export.replace('nan', '')
+            df_export = df_export.replace('None', '')
             
             sheet = client.open_by_key("1byoXaizt1OLFJNDcWyf9DHNe0aoxfMmsId54o2L9lFE").worksheet("Sheet1")
             sheet.clear()
