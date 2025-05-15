@@ -79,8 +79,10 @@ if uploaded_file:
     df_pairing = df_pairing.sort_values(by=['Nama', 'OUT_When']).reset_index(drop=True)
 
     # === ENRICHMENT ===
+    df_pairing['NTID'] = df_pairing['NTID'].astype(str)
+    df_department['NTID'] = df_department['NTID'].astype(str)
     df = df_pairing.merge(df_department, how='left', on='NTID')
-    df = df[~df['NTID'].astype(str).isin(pengecualian_list)]
+
     df['Jam_OUT'] = df['OUT_When'].dt.time
     df = df.dropna(subset=['Jam_OUT'])
 
