@@ -53,21 +53,22 @@ if uploaded_file:
         for _, out_row in outs.iterrows():
             out_time = out_row['When']
             candidates = ins[(ins['When'] > out_time) & (~ins['used'])].copy()
-            if candidates.empty:
-                continue
-            candidates['delta'] = (candidates['When'] - out_time).abs()
-            in_row = candidates.loc[candidates['delta'].idxmin()]
-            in_time = in_row['When']
-            durasi = (in_time - out_time).total_seconds() / 60
-            results.append({
-                'Nama': out_row['Nama'],
-                'OUT_When': out_time,
-                'IN_When': in_time,
-                'Durasi_menit': durasi,
-                'Gangguan_Office_Lobby': False,
-                'Valid': True
-            })
-            ins.loc[in_row.name, 'used'] = True
+            candidates['delta'] = (candidates['When'] - out_time).dt.total_seconds().abs()
+            candidates = candidates.sort_values('delta')
+            for _, in_row in candidates.iterrows():
+                in_time = in_row['When']
+                durasi = (in_time - out_time).total_seconds() / 60
+                if 0 < durasi <= 210:
+                    results.append({
+                        'Nama': out_row['Nama'],
+                        'OUT_When': out_time,
+                        'IN_When': in_time,
+                        'Durasi_menit': durasi,
+                        'Gangguan_Office_Lobby': False,
+                        'Valid': True
+                    })
+                    ins.loc[in_row.name, 'used'] = True
+                    break
 
     df_pairing = pd.DataFrame(results).sort_values(by=['Nama', 'OUT_When']).reset_index(drop=True)
 
