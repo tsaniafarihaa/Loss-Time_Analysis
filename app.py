@@ -53,12 +53,14 @@ if uploaded_file:
         for _, out_row in outs.iterrows():
             out_time = out_row['When']
             candidates = ins[(ins['When'] > out_time) & (~ins['used'])].copy()
+            if candidates.empty:
+                continue
             candidates['delta'] = (candidates['When'] - out_time).dt.total_seconds().abs()
             candidates = candidates.sort_values('delta')
             for _, in_row in candidates.iterrows():
                 in_time = in_row['When']
                 durasi = (in_time - out_time).total_seconds() / 60
-                if 0 < durasi <= 210:
+                if durasi > 0:
                     results.append({
                         'Nama': out_row['Nama'],
                         'OUT_When': out_time,
@@ -70,7 +72,9 @@ if uploaded_file:
                     ins.loc[in_row.name, 'used'] = True
                     break
 
-    df_pairing = pd.DataFrame(results).sort_values(by=['Nama', 'OUT_When']).reset_index(drop=True)
+    df_pairing = pd.DataFrame(results)
+    df_pairing = df_pairing[df_pairing['Durasi_menit'] <= 210]
+    df_pairing = df_pairing.sort_values(by=['Nama', 'OUT_When']).reset_index(drop=True)
 
     # === ENRICHMENT ===
     df = df_pairing.merge(df_department, how='left', on='Nama')
