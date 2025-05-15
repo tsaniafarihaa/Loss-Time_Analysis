@@ -13,8 +13,6 @@ st.title("Loss Time Analysis & Export to Spreadsheet")
 
 # === GOOGLE SHEETS SETUP ===
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-
-# Perbaikan: Tidak perlu json.loads() karena st.secrets sudah mengembalikan dictionary
 creds_dict = st.secrets["GOOGLE_SERVICE_ACCOUNT_JSON"]
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
@@ -41,7 +39,6 @@ if uploaded_file:
     df_tap = df_tap.dropna(subset=['Direction'])
     df_tap = df_tap[df_tap['Where'].str.contains('PEDESTRIAN', case=False, na=False)]
     df_tap = df_tap[~df_tap['ID'].isin(pengecualian_list)]
-    df_tap = df_tap.drop_duplicates(subset=['Nama', 'When', 'Direction'])
     df_tap = df_tap.sort_values(by=['Nama', 'When']).reset_index(drop=True)
     df_tap['date'] = df_tap['When'].dt.date
     df_tap['time_only'] = df_tap['When'].dt.time
@@ -61,8 +58,6 @@ if uploaded_file:
             in_row = candidates.iloc[0]
             in_time = in_row['When']
             durasi = (in_time - out_time).total_seconds() / 60
-            if durasi > 210:
-                continue
             results.append({
                 'Nama': out_row['Nama'],
                 'OUT_When': out_time,
