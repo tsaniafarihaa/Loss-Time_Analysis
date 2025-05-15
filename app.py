@@ -151,17 +151,25 @@ if uploaded_file:
         try:
             # Konversi kolom timestamp menjadi string
             df_export = df.copy()
+            
+            # Konversi kolom datetime64 menjadi string
             for col in df_export.select_dtypes(include=['datetime64']).columns:
                 df_export[col] = df_export[col].dt.strftime('%Y-%m-%d %H:%M:%S')
             
-            # Konversi kolom time menjadi string
+            # Konversi kolom time menjadi string dengan cara yang lebih aman
             for col in df_export.columns:
-                if pd.api.types.is_object_dtype(df_export[col]):
-                    if isinstance(df_export[col].iloc[0] if not df_export.empty else None, datetime.time):
-                        df_export[col] = df_export[col].apply(lambda x: x.strftime('%H:%M:%S') if pd.notnull(x) else None)
+                if not df_export.empty and pd.api.types.is_object_dtype(df_export[col]):
+                    # Periksa nilai pertama yang tidak null
+                    sample_vals = df_export[col].dropna()
+                    if len(sample_vals) > 0 and isinstance(sample_vals.iloc[0], datetime.time):
+                        df_export[col] = df_export[col].apply(lambda x: x.strftime('%H:%M:%S') if pd.notnull(x) and isinstance(x, datetime.time) else x)
             
             # Konversi NaN/None menjadi string kosong untuk kompatibilitas gspread
             df_export = df_export.fillna('')
+            
+            # Pastikan semua nilai dalam DataFrame dapat dikonversi ke JSON
+            for col in df_export.columns:
+                df_export[col] = df_export[col].astype(str)
             
             sheet = client.open_by_key("1byoXaizt1OLFJNDcWyf9DHNe0aoxfMmsId54o2L9lFE").worksheet("Sheet1")
             sheet.clear()
@@ -169,6 +177,7 @@ if uploaded_file:
             st.success("✅ Data berhasil disimpan ke Google Sheets")
         except Exception as e:
             st.error(f"❌ Gagal menyimpan ke spreadsheet: {e}")
+            st.exception(e)  # Tampilkan detail error untuk debugging
 
     # === DOWNLOAD EXCEL ===
     buffer = BytesIO()
