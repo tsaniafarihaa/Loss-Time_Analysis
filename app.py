@@ -29,7 +29,8 @@ if uploaded_file:
     pengecualian_list = df_pengecualian.iloc[:, 0].astype(str).tolist()
 
     # === PREPROCESS ===
-    df_tap['ID'] = df_tap['Who'].str.extract(r'(\d+)', expand=False)
+    df_tap['Who'] = df_tap['Who'].astype(str)  # pastikan Who bertipe string
+    df_tap['ID'] = df_tap['Who'].str.extract(r'^(\d+)', expand=False)
     df_tap['Nama'] = df_tap['Who'].str.extract(r',\s*(.*)$')
     df_tap['NTID'] = df_tap['ID']
     df_tap['When'] = pd.to_datetime(df_tap['When'], errors='coerce', dayfirst=True)
